@@ -33,14 +33,15 @@ class AIGenerationError(Exception):
 
 def _get_llm(structured_output_model=None):
     """Initialize and return the Gemini LLM."""
-    if not GEMINI_API_KEY:
+    api_key = os.getenv("GEMINI_API_KEY") or GEMINI_API_KEY
+    if not api_key:
         raise ConfigurationError(
             "Gemini API key is missing. Please create a .env file and add: GEMINI_API_KEY=your_key_here"
         )
 
     llm = ChatGoogleGenerativeAI(
         model="gemini-3.6-flash",
-        google_api_key=GEMINI_API_KEY,
+        google_api_key=api_key,
         temperature=0.8,
         max_retries=2,
     )

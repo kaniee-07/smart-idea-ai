@@ -1,0 +1,307 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SmartIdea AI - Your AI-powered innovation companion</title>
+  <link rel="stylesheet" href="style.css" />
+  <!-- Plotly.js CDN -->
+  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="app-layout">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="brand">
+        <span class="brand-icon">💡</span>
+        <div>
+          <h2>SmartIdea AI</h2>
+          <p class="brand-tag">Configure your idea generation</p>
+        </div>
+      </div>
+
+      <div class="sidebar-content">
+        <div class="form-group">
+          <label for="promptInput">Idea / Problem Prompt <span class="required">*</span></label>
+          <textarea
+            id="promptInput"
+            rows="5"
+            placeholder="Describe your problem or opportunity...&#10;&#10;Example: I want to build an AI-powered solution that helps college students manage their academic workload."
+          ></textarea>
+        </div>
+
+        <div class="form-group">
+          <label for="domainSelect">Domain</label>
+          <select id="domainSelect">
+            <option value="Startup">Startup</option>
+            <option value="Research">Research</option>
+            <option value="Product">Product</option>
+            <option value="Content Creation">Content Creation</option>
+            <option value="Education" selected>Education</option>
+            <option value="Healthcare">Healthcare</option>
+            <option value="Sustainability">Sustainability</option>
+            <option value="Technology">Technology</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="constraintsInput">Constraints (Optional)</label>
+          <textarea
+            id="constraintsInput"
+            rows="3"
+            placeholder="E.g., Low budget, mobile-first, rural users, no internet required..."
+          ></textarea>
+        </div>
+
+        <div class="form-group">
+          <label for="numIdeasSelect">Number of Ideas</label>
+          <select id="numIdeasSelect">
+            <option value="5" selected>5</option>
+            <option value="8">8</option>
+            <option value="10">10</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Upload Image (Optional)</label>
+          <div class="file-dropzone" id="dropzone">
+            <input type="file" id="imageInput" accept="image/png,image/jpeg,image/jpg" />
+            <div class="dropzone-label" id="dropzoneLabel">
+              <span>📷 Click or drag image here</span>
+              <small>PNG, JPG, or JPEG</small>
+            </div>
+            <div class="image-preview-container" id="imagePreviewContainer" style="display: none;">
+              <img id="imagePreview" alt="Upload preview" />
+              <button type="button" class="btn-remove-img" id="removeImgBtn">✕ Remove</button>
+            </div>
+          </div>
+        </div>
+
+        <button type="button" id="generateBtn" class="btn-primary">
+          <span class="btn-text">Generate Ideas</span>
+          <span class="spinner" style="display: none;"></span>
+        </button>
+
+        <div class="api-status-bar" id="apiStatusBar">
+          <span class="status-dot"></span>
+          <span id="apiStatusText">Checking API...</span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+      <!-- Header -->
+      <header class="main-header">
+        <h1 class="main-title">SmartIdea AI</h1>
+        <p class="main-subtitle">Your AI-powered innovation companion</p>
+      </header>
+
+      <!-- Alert Box -->
+      <div id="alertBox" class="alert" style="display: none;">
+        <span id="alertMessage"></span>
+        <button class="alert-close" id="alertCloseBtn">✕</button>
+      </div>
+
+      <!-- Welcome State -->
+      <section id="welcomeState" class="welcome-grid">
+        <div class="card welcome-card">
+          <h3>🚀 How It Works</h3>
+          <ol>
+            <li><strong>Describe</strong> your problem or opportunity in the sidebar.</li>
+            <li><strong>Select</strong> a domain and optional constraints.</li>
+            <li><strong>Upload</strong> an image for multimodal context.</li>
+            <li><strong>Generate</strong> structured, scored ideas instantly.</li>
+            <li><strong>Refine</strong> any idea with natural language prompts.</li>
+          </ol>
+        </div>
+        <div class="card welcome-card">
+          <h3>✨ What You Get</h3>
+          <ul>
+            <li>Structured ideas with problem, solution, and users</li>
+            <li>Impact & Feasibility scores (1–10)</li>
+            <li>Overall score and Gemini recommendation</li>
+            <li>Interactive Plotly visualizations</li>
+            <li>Actionable step-by-step implementation plan</li>
+          </ul>
+        </div>
+        <div class="card welcome-card">
+          <h3>💡 Pro Tips</h3>
+          <ul>
+            <li>Be specific in your prompt for deeper insights</li>
+            <li>Add constraints like budget or target devices</li>
+            <li>Upload sketches, UI screenshots, or diagrams</li>
+            <li>Use the refinement feature to tailor ideas</li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- Loading State -->
+      <div id="loadingState" class="loading-container" style="display: none;">
+        <div class="loader-pulse"></div>
+        <h3 id="loadingTitle">Analyzing your idea with Gemini...</h3>
+        <p class="text-muted">Brainstorming innovations, evaluating feasibility, and preparing reports.</p>
+      </div>
+
+      <!-- Results Container -->
+      <div id="resultsContainer" style="display: none;">
+        <!-- Innovation Report -->
+        <section class="section">
+          <h2 class="section-title">Innovation Report</h2>
+          <div class="report-grid">
+            <div class="card">
+              <span class="badge badge-purple" id="detectedDomainBadge">Education</span>
+              <h4 class="mt-2">Problem Summary</h4>
+              <p id="problemSummaryText" class="report-summary"></p>
+            </div>
+            <div class="card">
+              <h4>Key Opportunities</h4>
+              <div id="opportunitiesContainer" class="opportunities-wrap"></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Recommended Idea -->
+        <section class="section">
+          <h2 class="section-title">🏆 Recommended Idea</h2>
+          <div class="card recommended-card">
+            <div class="rec-header">
+              <span class="badge badge-gold">Top Recommendation</span>
+              <span class="badge badge-purple" id="recCategory"></span>
+            </div>
+            <h3 id="recTitle" class="rec-title"></h3>
+            <div class="field-group">
+              <div class="field-label">Why Gemini Recommends This:</div>
+              <p id="recReason" class="field-value"></p>
+            </div>
+            <div class="metrics-grid">
+              <div class="metric-box">
+                <span class="metric-label">Impact</span>
+                <span class="metric-value" id="recImpact"></span>
+              </div>
+              <div class="metric-box">
+                <span class="metric-label">Feasibility</span>
+                <span class="metric-value" id="recFeasibility"></span>
+              </div>
+              <div class="metric-box highlight">
+                <span class="metric-label">Overall Score</span>
+                <span class="metric-value" id="recOverall"></span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- All Generated Ideas -->
+        <section class="section">
+          <h2 class="section-title" id="generatedIdeasHeading">Generated Ideas</h2>
+          <div id="ideasList" class="ideas-list"></div>
+        </section>
+
+        <!-- Visualizations -->
+        <section class="section">
+          <h2 class="section-title">Visualizations</h2>
+          <div class="charts-grid">
+            <div class="card chart-card">
+              <div id="scatterChart" class="plotly-chart"></div>
+            </div>
+            <div class="card chart-card">
+              <div id="categoryChart" class="plotly-chart"></div>
+            </div>
+          </div>
+          <div class="card chart-card mt-3">
+            <div id="mapChart" class="plotly-chart map-chart"></div>
+          </div>
+        </section>
+
+        <!-- Refine an Idea -->
+        <section class="section">
+          <h2 class="section-title">Refine an Idea</h2>
+          <div class="card refine-card">
+            <div class="form-group">
+              <label for="refineSelect">Select an Idea to Refine</label>
+              <select id="refineSelect"></select>
+            </div>
+
+            <div class="form-group">
+              <label for="refineInput">How would you like to refine this idea?</label>
+              <textarea
+                id="refineInput"
+                rows="3"
+                placeholder="Enter your instruction or click a quick suggestion below..."
+              ></textarea>
+            </div>
+
+            <div class="quick-chips">
+              <span class="chip">Make this cheaper</span>
+              <span class="chip">Make this suitable for rural India</span>
+              <span class="chip">Make this useful for college students</span>
+              <span class="chip">Add AI features</span>
+              <span class="chip">Turn this into a startup</span>
+              <span class="chip">Make this suitable for a research project</span>
+            </div>
+
+            <button type="button" id="refineBtn" class="btn-primary mt-2">
+              <span class="btn-text">Refine Idea</span>
+              <span class="spinner" style="display: none;"></span>
+            </button>
+
+            <!-- Refinement Result -->
+            <div id="refineResultContainer" class="refined-result-card" style="display: none;">
+              <div class="refined-header">
+                <span class="badge badge-green">Refined Result</span>
+                <span class="badge badge-purple" id="refinedCategory"></span>
+              </div>
+              <h3 id="refinedTitle" class="mt-2"></h3>
+              <div class="field-group">
+                <div class="field-label">Problem:</div>
+                <p id="refinedProblem" class="field-value"></p>
+              </div>
+              <div class="field-group">
+                <div class="field-label">Solution:</div>
+                <p id="refinedSolution" class="field-value"></p>
+              </div>
+              <div class="field-group">
+                <div class="field-label">Target Users:</div>
+                <p id="refinedTargetUsers" class="field-value"></p>
+              </div>
+              <div class="field-group">
+                <div class="field-label">What Makes It Innovative:</div>
+                <p id="refinedInnovation" class="field-value"></p>
+              </div>
+              <div class="field-group">
+                <div class="field-label">Why It Matters:</div>
+                <p id="refinedWhyItMatters" class="field-value"></p>
+              </div>
+              <div class="metrics-grid">
+                <div class="metric-box">
+                  <span class="metric-label">Impact</span>
+                  <span class="metric-value" id="refinedImpact"></span>
+                </div>
+                <div class="metric-box">
+                  <span class="metric-label">Feasibility</span>
+                  <span class="metric-value" id="refinedFeasibility"></span>
+                </div>
+                <div class="metric-box highlight">
+                  <span class="metric-label">Overall Score</span>
+                  <span class="metric-value" id="refinedOverall"></span>
+                </div>
+              </div>
+              <div class="field-group mt-2">
+                <div class="field-label">Implementation Steps:</div>
+                <ol id="refinedStepsList" class="steps-list"></ol>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

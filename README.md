@@ -1,4 +1,4 @@
-﻿# SmartIdea AI
+# SmartIdea AI
 
 **Your AI-powered innovation companion**
 
@@ -21,27 +21,43 @@ Individuals, startups, and researchers often struggle to generate diverse, high-
 ## Architecture
 
 ```
-User -> Streamlit UI -> Input Processing -> LangChain -> Google Gemini -> Structured Ideas -> Scoring -> Recommendation -> Dashboard
+User (Browser SPA) 
+  → Vercel CDN / Static Frontend (public/index.html + Plotly.js)
+  → Vercel Serverless Function (api/index.py via FastAPI)
+  → LangChain
+  → Google Gemini (gemini-3.6-flash)
+  → Structured Ideas & Scoring
+  → Plotly Visualizations
+  → Interactive Dashboard & Refinement
 ```
 
 ## Project Structure
 
 ```
 smartidea-ai/
-├── app.py               # Streamlit application entry point
-├── requirements.txt     # Python dependencies
-├── .env.example         # Example environment configuration
+├── api/
+│   ├── __init__.py
+│   └── index.py            # Vercel Serverless Function (FastAPI API)
+├── public/
+│   ├── index.html          # Responsive Dark-themed Single Page Application
+│   ├── style.css           # Styling & UI components
+│   └── app.js              # Client-side state, API calls & Plotly rendering
+├── src/
+│   ├── __init__.py
+│   ├── ai.py               # LangChain + Gemini integration
+│   ├── prompts.py          # Innovation prompts & refinement templates
+│   ├── models.py           # Pydantic data models (Idea, IdeaResponse)
+│   └── visualization.py    # Plotly figures (scatter, category bar, idea map)
+├── vercel.json             # Vercel serverless routing configuration
+├── requirements.txt        # Dependencies for Vercel serverless deployment
+├── run_local.py            # Run the Vercel app locally on http://localhost:8000
+├── streamlit_app.py        # Streamlit version for optional local standalone use
+├── .env.example            # Environment configuration template
 ├── .gitignore
-├── README.md
-└── src/
-    ├── __init__.py
-    ├── ai.py            # LangChain + Gemini integration
-    ├── prompts.py       # Prompt templates
-    ├── models.py        # Pydantic data models
-    └── visualization.py # Plotly chart functions
+└── README.md
 ```
 
-## Installation
+## Local Development
 
 ### 1. Set up a virtual environment
 
@@ -67,24 +83,44 @@ pip install -r requirements.txt
 
 ### 3. Configure your API key
 
+Copy the example file:
 ```bash
 copy .env.example .env
 ```
 
-Open `.env` and replace the placeholder:
+Open `.env` and set:
 ```
-GEMINI_API_KEY=YOUR_ACTUAL_GEMINI_API_KEY
+GEMINI_API_KEY=YOUR_GEMINI_API_KEY
 ```
 
-Get your key from https://aistudio.google.com/app/apikey
-
-### 4. Run the application
+### 4. Run the Vercel-compatible app locally
 
 ```bash
-streamlit run app.py
+python run_local.py
 ```
+Open **http://localhost:8000** in your browser.
 
-The app opens at http://localhost:8501
+*(Optional: To run the legacy Streamlit interface: `streamlit run streamlit_app.py`)*
+
+## Deploying to Vercel
+
+1. Push your code to GitHub:
+   ```bash
+   git add .
+   git commit -m "Deploy to Vercel"
+   git push origin main
+   ```
+2. Go to [vercel.com](https://vercel.com) and click **"Add New..."** → **"Project"**.
+3. Import your GitHub repository: `kaniee-07/smart-idea-ai`.
+4. In the **Configure Project** screen:
+   - **Framework Preset**: Leave as **Other** (or Auto-detected).
+   - **Root Directory**: `./` (leave default).
+5. Open the **Environment Variables** section:
+   - **Key**: `GEMINI_API_KEY`
+   - **Value**: Your Gemini API key from Google AI Studio.
+   - Click **Add**.
+6. Click **Deploy**.
+7. Vercel will build and serve your app at `https://<project-name>.vercel.app`.
 
 ## Example Prompt
 
