@@ -1,0 +1,1 @@
+﻿# SmartIdea AI - Source Package
